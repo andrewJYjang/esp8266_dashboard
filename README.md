@@ -6,3 +6,4 @@
     조도센서 아날로그 값 0 - 1024를 퍼센트로 바꾸는 것도 겨우 눈에 들어 왔습니다. 그리고 처음 그 시작은 새로운 길을 만들고 있습니다. https://blog.naver.com/ceofus/223964780809
 
     
+![GoodLuckThreeFingerSaluteGIF](https://github.com/user-attachments/assets/6d74ce93-5426-4b25-8e8a-2d25b1cfa062)
