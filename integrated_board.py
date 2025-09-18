@@ -57,29 +57,24 @@ class SimpleSupabaseClient:
         else:
             return False, response.text
 
-# Supabase 클라이언트 초기화
+
+try:
+    supabase_url = st.secrets["SUPABASE_URL"]
+    supabase_key = st.secrets["SUPABASE_KEY"]
+except Exception:
+    st.sidebar.error("Supabase 설정이 필요합니다!")
+    supabase_url = st.sidebar.text_input("Supabase URL")
+    supabase_key = st.sidebar.text_input("Supabase Anon Key", type="password")
+    if not supabase_url or not supabase_key:
+        st.stop()
+
 @st.cache_resource
-def init_supabase():
-    try:
-        # secrets.toml에서 설정을 불러오기
-        url = st.secrets["SUPABASE_URL"]
-        key = st.secrets["SUPABASE_KEY"]
-    except:
-        # secrets.toml이 없으면 직접 입력
-        st.sidebar.error("Supabase 설정이 필요합니다!")
-        url = st.sidebar.text_input("Supabase URL")
-        key = st.sidebar.text_input("Supabase Anon Key", type="password")
-        
-        if not url or not key:
-            st.stop()
-    
-    # 두 가지 클라이언트 모두 생성
+def init_supabase(url, key):
     simple_client = SimpleSupabaseClient(url, key)
     auth_client = create_client(url, key)
-    
     return simple_client, auth_client
 
-simple_supabase, auth_supabase = init_supabase()
+simple_supabase, auth_supabase = init_supabase(supabase_url, supabase_key)
 
 # =============================================================================
 # 센서 데이터 관련 함수들 (app.py 기반)
@@ -115,22 +110,6 @@ def get_sensor_data_simple(hours=24):
         return pd.DataFrame()
 
 
-            # secrets.toml에서 설정을 불러오거나, 없으면 위젯으로 입력받기
-            try:
-                supabase_url = st.secrets["SUPABASE_URL"]
-                supabase_key = st.secrets["SUPABASE_KEY"]
-            except Exception:
-                st.sidebar.error("Supabase 설정이 필요합니다!")
-                supabase_url = st.sidebar.text_input("Supabase URL")
-                supabase_key = st.sidebar.text_input("Supabase Anon Key", type="password")
-                if not supabase_url or not supabase_key:
-                    st.stop()
-
-            @st.cache_resource
-            def init_supabase(url, key):
-                simple_client = SimpleSupabaseClient(url, key)
-                auth_client = create_client(url, key)
-                return simple_client, auth_client
 
 def get_sensor_stats(df):
     """센서 데이터 통계 계산"""
