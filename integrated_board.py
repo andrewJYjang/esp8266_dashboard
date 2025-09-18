@@ -114,6 +114,24 @@ def get_sensor_data_simple(hours=24):
         st.error(f"센서 데이터 조회 오류: {e}")
         return pd.DataFrame()
 
+
+            # secrets.toml에서 설정을 불러오거나, 없으면 위젯으로 입력받기
+            try:
+                supabase_url = st.secrets["SUPABASE_URL"]
+                supabase_key = st.secrets["SUPABASE_KEY"]
+            except Exception:
+                st.sidebar.error("Supabase 설정이 필요합니다!")
+                supabase_url = st.sidebar.text_input("Supabase URL")
+                supabase_key = st.sidebar.text_input("Supabase Anon Key", type="password")
+                if not supabase_url or not supabase_key:
+                    st.stop()
+
+            @st.cache_resource
+            def init_supabase(url, key):
+                simple_client = SimpleSupabaseClient(url, key)
+                auth_client = create_client(url, key)
+                return simple_client, auth_client
+
 def get_sensor_stats(df):
     """센서 데이터 통계 계산"""
     if df.empty:
