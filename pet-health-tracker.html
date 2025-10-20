@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반려동물 건강 기록부</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .pet-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pet-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #f0f0f0;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pet-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-camera {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .record-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .record-type {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .type-vaccination { background: #e3f2fd; color: #1976d2; }
+        .type-checkup { background: #e8f5e9; color: #388e3c; }
+        .type-medication { background: #f3e5f5; color: #7b1fa2; }
+        .type-disease { background: #ffebee; color: #c62828; }
+
+        .record-date {
+            color: #999;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .record-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .record-desc {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .next-date {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffebee;
+            color: #c62828;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 16px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .camera-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        video, canvas {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .ocr-result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .ocr-status {
+            text-align: center;
+            padding: 15px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐾 반려동물 건강 기록부</h1>
+            <div class="pet-tabs" id="petTabs"></div>
+            <button class="btn btn-primary" onclick="toggleForm()">
+                ➕ 새 기록 추가
+            </button>
+            <button class="btn btn-camera" onclick="toggleCamera()">
+                📷 카메라로 기록 추가
+            </button>
+        </div>
+
+        <div id="cameraSection" class="camera-section hidden">
+            <h2 style="margin-bottom: 15px;">처방전/진료기록 촬영</h2>
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" class="hidden"></canvas>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="capturePhoto()" style="flex: 1;">
+                    📸 촬영
+                </button>
+                <button class="btn btn-secondary" onclick="closeCamera()" style="flex: 1;">
+                    취소
+                </button>
+            </div>
+            
+            <div id="ocrStatus" class="ocr-status hidden"></div>
+            <div id="ocrResult" class="ocr-result hidden"></div>
+        </div>
+
+        <div id="formSection" class="form-section hidden">
+            <h2 style="margin-bottom: 20px;">기록 추가</h2>
+            
+            <div class="form-group">
+                <label>날짜</label>
+                <input type="date" id="recordDate">
+            </div>
+
+            <div class="form-group">
+                <label>유형</label>
+                <select id="recordType">
+                    <option value="vaccination">예방접종</option>
+                    <option value="checkup">건강검진</option>
+                    <option value="medication">투약</option>
+                    <option value="disease">질병</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>제목</label>
+                <input type="text" id="recordTitle" placeholder="예: DHPPL 접종, 피부병 치료">
+            </div>
+
+            <div class="form-group">
+                <label>상세 내용</label>
+                <textarea id="recordDesc" placeholder="증상, 처방, 특이사항 등"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>다음 예정일 (선택)</label>
+                <input type="date" id="nextDate">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveRecord()" style="flex: 1;">
+                    저장
+                </button>
+                <button class="btn btn-secondary" onclick="toggleForm()" style="flex: 1;">
+                    취소
+                </button>
+            </div>
+        </div>
+
+        <div id="recordsList"></div>
+    </div>
+
+    <script>
+        let pets = [
+            { id: 1, name: '뽀삐', type: '강아지' }
+        ];
+
+        let records = [
+            {
+                id: 1,
+                petId: 1,
+                date: '2025-10-15',
+                type: 'vaccination',
+                title: 'DHPPL 접종',
+                description: '5차 종합백신 접종 완료',
+                nextDate: '2026-10-15'
+            }
+        ];
+
+        let selectedPet = 1;
+        let stream = null;
+
+        const typeLabels = {
+            vaccination: '예방접종',
+            checkup: '건강검진',
+            medication: '투약',
+            disease: '질병'
+        };
+
+        function init() {
+            renderPetTabs();
+            renderRecords();
+            document.getElementById('recordDate').valueAsDate = new Date();
+        }
+
+        function renderPetTabs() {
+            const tabs = document.getElementById('petTabs');
+            tabs.innerHTML = pets.map(pet => `
+                <button class="pet-tab ${pet.id === selectedPet ? 'active' : ''}" 
+                        onclick="selectPet(${pet.id})">
+                    ${pet.name} (${pet.type})
+                </button>
+            `).join('');
+        }
+
+        function selectPet(petId) {
+            selectedPet = petId;
+            renderPetTabs();
+            renderRecords();
+        }
+
+        function renderRecords() {
+            const list = document.getElementById('recordsList');
+            const filtered = records.filter(r => r.petId === selectedPet);
+
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <p style="font-size: 24px; margin-bottom: 10px;">📋</p>
+                        <p>아직 기록이 없습니다</p>
+                        <p style="font-size: 14px; margin-top: 5px;">새 기록을 추가해보세요</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = filtered.map(record => `
+                <div class="record-card">
+                    <button class="delete-btn" onclick="deleteRecord(${record.id})">🗑️ 삭제</button>
+                    <div class="record-type type-${record.type}">
+                        ${typeLabels[record.type]}
+                    </div>
+                    <div class="record-date">📅 ${record.date}</div>
+                    <div class="record-title">${record.title}</div>
+                    ${record.description ? `<div class="record-desc">${record.description}</div>` : ''}
+                    ${record.nextDate ? `<div class="next-date">📅 다음 예정: ${record.nextDate}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function toggleForm() {
+            const form = document.getElementById('formSection');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('cameraSection').classList.add('hidden');
+                closeCamera();
+            }
+        }
+
+        function saveRecord() {
+            const date = document.getElementById('recordDate').value;
+            const type = document.getElementById('recordType').value;
+            const title = document.getElementById('recordTitle').value;
+            const description = document.getElementById('recordDesc').value;
+            const nextDate = document.getElementById('nextDate').value;
+
+            if (!date || !title) {
+                alert('날짜와 제목은 필수입니다!');
+                return;
+            }
+
+            const newRecord = {
+                id: Date.now(),
+                petId: selectedPet,
+                date,
+                type,
+                title,
+                description,
+                nextDate
+            };
+
+            records.unshift(newRecord);
+            
+            document.getElementById('recordTitle').value = '';
+            document.getElementById('recordDesc').value = '';
+            document.getElementById('nextDate').value = '';
+            
+            toggleForm();
+            renderRecords();
+        }
+
+        function deleteRecord(id) {
+            if (confirm('이 기록을 삭제하시겠습니까?')) {
+                records = records.filter(r => r.id !== id);
+                renderRecords();
+            }
+        }
+
+        async function toggleCamera() {
+            const cameraSection = document.getElementById('cameraSection');
+            const formSection = document.getElementById('formSection');
+            
+            cameraSection.classList.toggle('hidden');
+            formSection.classList.add('hidden');
+
+            if (!cameraSection.classList.contains('hidden')) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' } 
+                    });
+                    document.getElementById('video').srcObject = stream;
+                } catch (err) {
+                    alert('카메라 접근 권한이 필요합니다: ' + err.message);
+                    cameraSection.classList.add('hidden');
+                }
+            } else {
+                closeCamera();
+            }
+        }
+
+        function closeCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            document.getElementById('cameraSection').classList.add('hidden');
+            document.getElementById('ocrResult').classList.add('hidden');
+            document.getElementById('ocrStatus').classList.add('hidden');
+        }
+
+        async function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            const statusDiv = document.getElementById('ocrStatus');
+            const resultDiv = document.getElementById('ocrResult');
+            
+            statusDiv.classList.remove('hidden');
+            statusDiv.textContent = '📄 텍스트 인식 중...';
+            resultDiv.classList.add('hidden');
+
+            try {
+                const result = await Tesseract.recognize(
+                    canvas,
+                    'kor+eng',
+                    {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                statusDiv.textContent = `📄 인식 중... ${Math.round(m.progress * 100)}%`;
+                            }
+                        }
+                    }
+                );
+
+                const text = result.data.text.trim();
+                
+                if (text) {
+                    statusDiv.textContent = '✅ 인식 완료!';
+                    resultDiv.classList.remove('hidden');
+                    resultDiv.innerHTML = `<strong>인식된 텍스트:</strong><br><br>${text.replace(/\n/g, '<br>')}`;
+                    
+                    document.getElementById('recordDesc').value = text;
+                } else {
+                    statusDiv.textContent = '❌ 텍스트를 인식할 수 없습니다';
+                }
+            } catch (err) {
+                statusDiv.textContent = '❌ 오류: ' + err.message;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
